@@ -327,80 +327,119 @@ if "logged_in" not in st.session_state:
     st.session_state["session_id"] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
 if not st.session_state["logged_in"]:
-    # Full-page branded login — branding + form in same column, no gap
+    # Full-page branded login — all HTML in one self-contained block
     st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+    html,body,[class*="css"]{font-family:'DM Sans',sans-serif!important;}
     [data-testid="stAppViewContainer"]{
-        background:linear-gradient(135deg,#0B2545 0%,#1356a0 55%,#1a6bc4 100%)!important;
+        background:linear-gradient(145deg,#071a35 0%,#0d2d5e 40%,#1356a0 80%,#1a6bc4 100%)!important;
         min-height:100vh;
     }
-    [data-testid="stMainBlockContainer"]{
-        padding-top:8vh!important;
-        padding-bottom:0!important;
-    }
+    [data-testid="stMainBlockContainer"]{padding:0!important;margin:0!important;}
+    [data-testid="stVerticalBlock"]{padding:0!important;gap:0!important;}
     [data-testid="stSidebar"]{display:none!important;}
-    [data-testid="stDecoration"]{display:none!important;}
-    /* Card styling applied to the column block */
-    div[data-testid="column"]:nth-child(2)>div:first-child{
-        background:white;border-radius:20px;padding:36px 40px 32px;
-        box-shadow:0 24px 80px rgba(0,0,0,.35),0 4px 20px rgba(0,0,0,.2);
-    }
-    .lhdr{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-    .licon{width:46px;height:46px;background:linear-gradient(135deg,#0B2545,#1356a0);
-        border-radius:11px;display:flex;align-items:center;justify-content:center;
-        font-size:22px;flex-shrink:0;}
-    .lbrand{font-size:10px;font-weight:700;color:#1356a0;text-transform:uppercase;
-        letter-spacing:.10em;margin-bottom:3px;}
-    .ltitle{font-size:18px;font-weight:800;color:#0B1E38;line-height:1.2;}
-    .lrule{height:1px;background:#e5e9f0;margin:14px 0 12px;}
-    .ltag{font-size:12px;color:#6b7280;margin-bottom:4px;line-height:1.5;}
-    .lfoot{text-align:center;padding:14px 0 4px;}
-    .lfoot-txt{font-size:11px;color:#9ca3af;}
-    .lfoot-ai{display:inline-block;background:#f3f4f6;border-radius:20px;
-        padding:3px 11px;font-size:10px;font-weight:700;color:#6b7280;margin-top:6px;}
-    /* Fix input labels inside the card */
-    div[data-testid="column"]:nth-child(2) label{color:#374151!important;font-size:13px!important;}
-    div[data-testid="column"]:nth-child(2) input{color:#0B1E38!important;}
-    div[data-testid="column"]:nth-child(2) [data-testid="stFormSubmitButton"] button{
-        background:linear-gradient(135deg,#1356a0,#0B2545)!important;
-        color:white!important;font-weight:700!important;border:none!important;
-        border-radius:8px!important;padding:.5rem 1rem!important;margin-top:4px!important;}
-    </style>
-    """, unsafe_allow_html=True)
+    [data-testid="stDecoration"],[data-testid="stHeader"]{display:none!important;}
+    /* Override ALL Streamlit element backgrounds so they don't leak on the gradient */
+    [data-testid="stMainBlockContainer"]>div{background:transparent!important;}
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        # Branding header — inside same column as form, no gap
-        st.markdown("""
+    /* Login card wrapper */
+    .lw{display:flex;justify-content:center;align-items:center;
+        min-height:100vh;padding:24px;}
+    .lc{background:#fff;border-radius:22px;padding:42px 44px 36px;
+        width:100%;max-width:440px;
+        box-shadow:0 32px 80px rgba(0,0,0,.40),0 8px 24px rgba(0,0,0,.20);}
+
+    /* Branding row */
+    .lhdr{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+    .lico{width:52px;height:52px;border-radius:14px;
+        background:linear-gradient(135deg,#071a35 0%,#1356a0 100%);
+        display:flex;align-items:center;justify-content:center;
+        font-size:26px;box-shadow:0 4px 16px rgba(19,86,160,.35);flex-shrink:0;}
+    .lbrand{font-size:10px;font-weight:700;color:#1356a0;
+        text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;}
+    .ltit{font-size:20px;font-weight:800;color:#071a35;line-height:1.2;}
+
+    /* Divider */
+    .lrule{height:1px;background:linear-gradient(90deg,#dde8f8,transparent);
+        margin:18px 0 16px;}
+
+    /* Tagline */
+    .ltag{font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:24px;}
+    .ltag strong{color:#1356a0;}
+
+    /* Labels */
+    .lc label{font-size:13px!important;font-weight:600!important;
+        color:#374151!important;margin-bottom:4px!important;}
+
+    /* Inputs */
+    .lc input{font-size:14px!important;color:#0B1E38!important;
+        border:1.5px solid #d1ddf0!important;border-radius:10px!important;
+        padding:10px 14px!important;background:#f8fafd!important;}
+    .lc input:focus{border-color:#1356a0!important;
+        box-shadow:0 0 0 3px rgba(19,86,160,.12)!important;
+        background:#fff!important;}
+
+    /* Sign-in button */
+    .lc [data-testid="stFormSubmitButton"] button{
+        background:linear-gradient(135deg,#1356a0,#071a35)!important;
+        color:#fff!important;font-size:15px!important;font-weight:700!important;
+        border:none!important;border-radius:10px!important;
+        padding:.65rem 1.2rem!important;margin-top:8px!important;
+        letter-spacing:.02em;
+        box-shadow:0 4px 16px rgba(19,86,160,.35)!important;
+        transition:opacity .15s!important;}
+    .lc [data-testid="stFormSubmitButton"] button:hover{opacity:.9!important;}
+
+    /* Error message */
+    .lc [data-testid="stAlert"]{border-radius:10px!important;}
+
+    /* Footer */
+    .lfoot{text-align:center;margin-top:22px;padding-top:16px;
+        border-top:1px solid #eef3fa;}
+    .lfoot-txt{font-size:11px;color:#9ca3af;margin-bottom:8px;}
+    .lfoot-ai{display:inline-flex;align-items:center;gap:5px;
+        background:#f0f4fa;border:1px solid #dde8f5;border-radius:20px;
+        padding:4px 14px;font-size:11px;font-weight:700;color:#1356a0;}
+    </style>
+
+    <div class="lw">
+      <div class="lc">
         <div class="lhdr">
-          <div class="licon">🔄</div>
+          <div class="lico">🔄</div>
           <div>
             <div class="lbrand">AQB Solutions</div>
-            <div class="ltitle">Encoder Cross-Reference<br>Intelligence Platform</div>
+            <div class="ltit">Encoder Cross-Reference<br>Intelligence Platform</div>
           </div>
         </div>
         <div class="lrule"></div>
-        <div class="ltag">AI-powered cross-referencing — find the best replacement
-          across 7 manufacturers and 700,000+ configurations instantly.</div>
-        """, unsafe_allow_html=True)
+        <div class="ltag">AI-powered cross-referencing — instantly find the best replacement
+          across <strong>7 manufacturers</strong> and <strong>700,000+</strong> configurations.</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    # Streamlit form overlaid on top — center-aligned column
+    _, col_mid, _ = st.columns([1, 2, 1])
+    with col_mid:
         with st.form("login_form"):
             uid = st.text_input("User ID", placeholder="e.g. KUB001")
-            pwd = st.text_input("Password", type="password", placeholder="••••••••")
+            pwd = st.text_input("Password", type="password", placeholder="Enter password")
             login_btn = st.form_submit_button("Sign In →", use_container_width=True)
 
         if login_btn:
-            uid_clean = uid.strip().upper()
-            if uid_clean in _VALID_USERS and _VALID_USERS[uid_clean] == pwd.strip():
-                prefix = uid_clean[:3]
-                company = _USER_COMPANY.get(prefix, "AQB Solutions")
-                st.session_state["logged_in"] = True
-                st.session_state["user_id"]   = uid_clean
-                st.session_state["company"]   = company
-                _log_event(uid_clean, "login")
-                st.rerun()
-            else:
-                st.error("Invalid credentials. Please check your User ID and password.")
+            with st.spinner("Signing in…"):
+                uid_clean = uid.strip().upper()
+                if uid_clean in _VALID_USERS and _VALID_USERS[uid_clean] == pwd.strip():
+                    prefix  = uid_clean[:3]
+                    company = _USER_COMPANY.get(prefix, "AQB Solutions")
+                    st.session_state["logged_in"] = True
+                    st.session_state["user_id"]   = uid_clean
+                    st.session_state["company"]   = company
+                    _log_event(uid_clean, "login")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid credentials. Please check your User ID and password.")
 
         st.markdown("""
         <div class="lfoot">
@@ -445,6 +484,33 @@ UNIFIED_DF   = load_unified()
 _DB_ONLINE   = _db_connected()
 ALL_MFRS     = sorted(UNIFIED_DF["manufacturer"].dropna().unique().tolist())
 COMP_MFRS    = [m for m in ALL_MFRS if m != "Kubler"]
+
+# ── Pre-compute fast-lookup columns once at startup ───────────────────────────
+@st.cache_resource(show_spinner=False)
+def _preprocess_df(df):
+    """Add cached columns for fast prefilter lookups."""
+    import numpy as np
+    from schema import OUTPUT_CIRCUIT_CANONICAL, OUTPUT_VOLTAGE_CLASS
+    out = df.copy()
+    # Uppercase part number for fast source lookup
+    out["_pn_upper"] = out["part_number"].astype(str).str.upper()
+    # Voltage class
+    def _vcls(v):
+        raw  = str(v).strip()
+        canon = OUTPUT_CIRCUIT_CANONICAL.get(raw, raw)
+        cls  = OUTPUT_VOLTAGE_CLASS.get(canon) or OUTPUT_VOLTAGE_CLASS.get(raw, "")
+        return cls if cls else ""
+    out["_oc_class"]  = out["output_circuit_canonical"].fillna("").map(_vcls)
+    # Shaft hollow flag
+    out["_is_hollow"] = out["shaft_type"].fillna("").str.lower().str.contains("hollow")
+    # Convert key string columns to category for 10-50× faster groupby/merge/dedup
+    for col in ["output_circuit_canonical", "shaft_type", "connection_type",
+                "manufacturer", "product_family", "_oc_class"]:
+        if col in out.columns:
+            out[col] = out[col].astype("category")
+    return out
+
+UNIFIED_DF = _preprocess_df(UNIFIED_DF)
 
 # ── Manufacturer auto-detect patterns ────────────────────────────────────────
 _MFR_PATTERNS = [
@@ -1100,17 +1166,24 @@ with st.sidebar:
         if _IS_ADMIN and _SRC_FILTER:
             src_mfr = _SRC_FILTER
         _t_search_start = datetime.datetime.utcnow()
-        with st.spinner("Matching…"):
-            _bl, _bo = _load_feedback()
-            results, status, exps = find_matches_with_status(
-                pn_input.strip(), UNIFIED_DF,
-                target_manufacturer=_TGT_MFR,
-                source_manufacturer=src_mfr,
-                top_n=top_n,
-                weights=st.session_state["weights"],
-                blocklist=_bl,
-                booklist=_bo,
-            )
+        _prog_bar   = st.progress(0, text="🔍 Looking up encoder in database…")
+        _prog_bar.progress(10, text="🔍 Looking up encoder in database…")
+        _bl, _bo = _load_feedback()
+        _prog_bar.progress(20, text="⚡ Pre-filtering candidate pool…")
+        results, status, exps = find_matches_with_status(
+            pn_input.strip(), UNIFIED_DF,
+            target_manufacturer=_TGT_MFR,
+            source_manufacturer=src_mfr,
+            top_n=top_n,
+            weights=st.session_state["weights"],
+            blocklist=_bl,
+            booklist=_bo,
+        )
+        _prog_bar.progress(85, text="🤖 Generating match explanations…")
+        import time as _time; _time.sleep(0.1)
+        _prog_bar.progress(100, text="✅ Complete!")
+        _time.sleep(0.3)
+        _prog_bar.empty()
         results_list = _enrich_results(results, UNIFIED_DF)
         st.session_state.update({"results":results_list,"status":status,"exps":exps})
         # Build analytics payload
