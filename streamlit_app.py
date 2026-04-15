@@ -419,7 +419,14 @@ if not st.session_state["logged_in"]:
     </div>
     """, unsafe_allow_html=True)
 
-    # Streamlit form overlaid on top — center-aligned column
+    # Streamlit form — pull it up tight against the branding card above
+    st.markdown("""
+    <style>
+    /* Pull the form column up to remove gap between card and form */
+    [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"]{
+        margin-top:-280px!important;
+    }
+    </style>""", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
         with st.form("login_form"):
@@ -1165,6 +1172,20 @@ with st.sidebar:
         src_mfr = detected_mfr if (detected_mfr and detected_mfr != _TGT_MFR) else None
         if _IS_ADMIN and _SRC_FILTER:
             src_mfr = _SRC_FILTER
+
+        # Same-manufacturer guard — applies to all users including admin
+        _eff_src = src_mfr or detected_mfr or ""
+        if _eff_src and _TGT_MFR and _eff_src.lower() == _TGT_MFR.lower():
+            if not _IS_ADMIN:
+                st.session_state.update({"results":None,"status":None,"exps":None,
+                    "pn_value": pn_input.strip()})
+                st.warning(f"⚠ Source and target are both **{_TGT_MFR}**. "
+                           f"Please enter a competitor part number to find a {_TGT_MFR} replacement.")
+                st.rerun()
+            else:
+                # Admin: allow same-manufacturer — finds closest alternative,
+                # excluding the exact queried part (handled by src_mfr exclusion in matcher)
+                pass
         _t_search_start = datetime.datetime.utcnow()
         _prog_bar   = st.progress(0, text="🔍 Looking up encoder in database…")
         _prog_bar.progress(10, text="🔍 Looking up encoder in database…")

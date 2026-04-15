@@ -637,8 +637,10 @@ def _prefilter(pool_df: pd.DataFrame, source: dict) -> pd.DataFrame:
     if s_shaft:
         s_hollow = "hollow" in s_shaft.lower()
         if "_is_hollow" in df.columns:
-            c_hollow = df["_is_hollow"].values
-            c_has    = df["shaft_type"].fillna("").values != ""
+            c_hollow = df["_is_hollow"].values.astype(bool)
+            _st = df["shaft_type"]
+            _st_arr = _st.astype(object).values if hasattr(_st, 'cat') else _st.values
+            c_has    = np.array([str(v) if v is not None else "" for v in _st_arr]) != ""
             mask     = ~c_has | (c_hollow == s_hollow)
         else:
             sc = df["shaft_type"].fillna("").str.lower()
@@ -664,8 +666,10 @@ def _prefilter(pool_df: pd.DataFrame, source: dict) -> pd.DataFrame:
                     OUTPUT_CIRCUIT_CANONICAL.get(str(s_oc).strip(), str(s_oc).strip()), ""))
         if s_cls and s_cls not in ("universal", "analog", ""):
             if "_oc_class" in df.columns:
-                # Fast path: pre-computed column
-                c_cls = df["_oc_class"].values
+                # Fast path: pre-computed column (convert category → object for comparison)
+                _oc_col = df["_oc_class"]
+                c_cls = _oc_col.astype(object).values if hasattr(_oc_col, 'cat') else _oc_col.values
+                c_cls = np.array([str(v) if v is not None else "" for v in c_cls])
                 mask  = (c_cls == "") | (c_cls == s_cls) | (c_cls == "universal") | (c_cls == "analog")
             else:
                 # Slow path: compute on the fly
@@ -710,9 +714,15 @@ def _vectorized_scores(source: dict, pool: pd.DataFrame, weights: dict) -> pd.Se
     cap_speed     = np.zeros(N, dtype=bool)
 
     def _col(c):
-        return pd.to_numeric(pool[c], errors="coerce").values if c in pool.columns else np.full(N, np.nan)
+        if c not in pool.columns: return np.full(N, np.nan)
+        s = pool[c]
+        if hasattr(s, 'cat'): s = s.astype(object)  # convert category → object first
+        return pd.to_numeric(s, errors="coerce").values
     def _scol(c):
-        return pool[c].fillna("").astype(str).values if c in pool.columns else np.full(N, "")
+        if c not in pool.columns: return np.full(N, "", dtype=object)
+        s = pool[c]
+        if hasattr(s, 'cat'): s = s.astype(object)  # convert category → object first
+        return s.fillna("").astype(str).values
 
     def _accum(key, sim_arr):
         wt = w.get(key, 0.0)
@@ -999,10 +1009,16 @@ def find_matches_with_status(source_pn: str, df: pd.DataFrame,
     source_record = df[mask].iloc[0].to_dict()
     src_mfr       = source_record.get("manufacturer","")
 
-    # Build pool (exclude source manufacturer)
-    pool = df[df["manufacturer"] != src_mfr].copy()
-    if target_manufacturer:
-        pool = pool[pool["manufacturer"] == target_manufacturer].copy()
+    # Build pool
+    if target_manufacturer and src_mfr and src_mfr.lower() == target_manufacturer.lower():
+        # Same-manufacturer query (admin): exclude only the exact queried part
+        pool = df[df["manufacturer"] == target_manufacturer].copy()
+        pool = pool[pool["part_number"].astype(str).str.upper() != source_pn.strip().upper()]
+    else:
+        # Normal: exclude source manufacturer entirely
+        pool = df[df["manufacturer"] != src_mfr].copy()
+        if target_manufacturer:
+            pool = pool[pool["manufacturer"] == target_manufacturer].copy()
 
     # Score
     results = find_matches(source_record, pool, top_n=top_n * 3, weights=weights)
