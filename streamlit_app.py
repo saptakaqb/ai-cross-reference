@@ -294,6 +294,19 @@ html,body,[class*="css"]{font-family:'DM Sans',sans-serif;}
     padding:8px 12px;font-size:12px;color:#fff!important;margin-bottom:8px;}
 .kubler-target-badge strong{color:#fff!important;}
 .kubler-target-badge .badge-sub{color:rgba(200,220,255,.80)!important;font-size:11px;}
+/* ── Admin selectbox — white box, dark text ── */
+[data-testid="stSidebar"] .stSelectbox>label{
+    color:#ffd580!important;font-size:11px!important;
+    text-transform:uppercase!important;letter-spacing:.06em!important;font-weight:700!important;}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"]>div:first-child{
+    background:#ffffff!important;border:2px solid #3a7fd4!important;border-radius:8px!important;}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] span{color:#0B1E38!important;}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] div{color:#0B1E38!important;}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] p{color:#0B1E38!important;}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] svg{fill:#1356a0!important;}
+[data-baseweb="popover"] li,[data-baseweb="option"]{
+    color:#0B1E38!important;background:#ffffff!important;}
+[data-baseweb="popover"] li:hover{background:#e8f0fb!important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -314,53 +327,63 @@ if "logged_in" not in st.session_state:
     st.session_state["session_id"] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
 if not st.session_state["logged_in"]:
-    # Full-page branded login — single unified card containing branding + form
+    # Full-page branded login — branding + form in same column, no gap
     st.markdown("""
     <style>
     [data-testid="stAppViewContainer"]{
-        background: linear-gradient(135deg, #0B2545 0%, #1356a0 55%, #1a6bc4 100%) !important;
-        min-height: 100vh;
+        background:linear-gradient(135deg,#0B2545 0%,#1356a0 55%,#1a6bc4 100%)!important;
+        min-height:100vh;
     }
-    [data-testid="stMainBlockContainer"]{padding:20px!important;}
+    [data-testid="stMainBlockContainer"]{
+        padding-top:8vh!important;
+        padding-bottom:0!important;
+    }
     [data-testid="stSidebar"]{display:none!important;}
     [data-testid="stDecoration"]{display:none!important;}
-    .lcard-wrap{display:flex;align-items:flex-start;justify-content:center;
-        min-height:90vh;padding-top:6vh;}
-    .lcard{background:white;border-radius:20px;padding:36px 40px 32px;
-        width:100%;max-width:420px;
-        box-shadow:0 24px 80px rgba(0,0,0,.35),0 4px 20px rgba(0,0,0,.2);}
-    .lcard-logo{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-    .lcard-icon{width:46px;height:46px;background:linear-gradient(135deg,#0B2545,#1356a0);
+    /* Card styling applied to the column block */
+    div[data-testid="column"]:nth-child(2)>div:first-child{
+        background:white;border-radius:20px;padding:36px 40px 32px;
+        box-shadow:0 24px 80px rgba(0,0,0,.35),0 4px 20px rgba(0,0,0,.2);
+    }
+    .lhdr{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+    .licon{width:46px;height:46px;background:linear-gradient(135deg,#0B2545,#1356a0);
         border-radius:11px;display:flex;align-items:center;justify-content:center;
         font-size:22px;flex-shrink:0;}
-    .lcard-brand{font-size:10px;font-weight:700;color:#1356a0;text-transform:uppercase;
+    .lbrand{font-size:10px;font-weight:700;color:#1356a0;text-transform:uppercase;
         letter-spacing:.10em;margin-bottom:3px;}
-    .lcard-title{font-size:19px;font-weight:800;color:#0B1E38;line-height:1.2;}
-    .lcard-rule{height:1px;background:#e5e9f0;margin:16px 0 14px;}
-    .lcard-tag{font-size:12px;color:#6b7280;margin-bottom:20px;line-height:1.5;}
-    .lcard-foot{text-align:center;margin-top:20px;}
-    .lcard-foot-txt{font-size:11px;color:#9ca3af;}
-    .lcard-ai{display:inline-block;background:#f3f4f6;border-radius:20px;
+    .ltitle{font-size:18px;font-weight:800;color:#0B1E38;line-height:1.2;}
+    .lrule{height:1px;background:#e5e9f0;margin:14px 0 12px;}
+    .ltag{font-size:12px;color:#6b7280;margin-bottom:4px;line-height:1.5;}
+    .lfoot{text-align:center;padding:14px 0 4px;}
+    .lfoot-txt{font-size:11px;color:#9ca3af;}
+    .lfoot-ai{display:inline-block;background:#f3f4f6;border-radius:20px;
         padding:3px 11px;font-size:10px;font-weight:700;color:#6b7280;margin-top:6px;}
+    /* Fix input labels inside the card */
+    div[data-testid="column"]:nth-child(2) label{color:#374151!important;font-size:13px!important;}
+    div[data-testid="column"]:nth-child(2) input{color:#0B1E38!important;}
+    div[data-testid="column"]:nth-child(2) [data-testid="stFormSubmitButton"] button{
+        background:linear-gradient(135deg,#1356a0,#0B2545)!important;
+        color:white!important;font-weight:700!important;border:none!important;
+        border-radius:8px!important;padding:.5rem 1rem!important;margin-top:4px!important;}
     </style>
-    <div class="lcard-wrap">
-      <div class="lcard">
-        <div class="lcard-logo">
-          <div class="lcard-icon">🔄</div>
-          <div>
-            <div class="lcard-brand">AQB Solutions</div>
-            <div class="lcard-title">Encoder Cross-Reference<br>Intelligence Platform</div>
-          </div>
-        </div>
-        <div class="lcard-rule"></div>
-        <div class="lcard-tag">AI-powered cross-referencing — find the best replacement
-          across 7 manufacturers and 700,000+ configurations instantly.</div>
-      </div>
-    </div>
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
+        # Branding header — inside same column as form, no gap
+        st.markdown("""
+        <div class="lhdr">
+          <div class="licon">🔄</div>
+          <div>
+            <div class="lbrand">AQB Solutions</div>
+            <div class="ltitle">Encoder Cross-Reference<br>Intelligence Platform</div>
+          </div>
+        </div>
+        <div class="lrule"></div>
+        <div class="ltag">AI-powered cross-referencing — find the best replacement
+          across 7 manufacturers and 700,000+ configurations instantly.</div>
+        """, unsafe_allow_html=True)
+
         with st.form("login_form"):
             uid = st.text_input("User ID", placeholder="e.g. KUB001")
             pwd = st.text_input("Password", type="password", placeholder="••••••••")
@@ -380,9 +403,9 @@ if not st.session_state["logged_in"]:
                 st.error("Invalid credentials. Please check your User ID and password.")
 
         st.markdown("""
-        <div class="lcard-foot">
-          <div class="lcard-foot-txt">Authorised AQB Solutions personnel only</div>
-          <div class="lcard-ai">⚡ Powered by Claude AI</div>
+        <div class="lfoot">
+          <div class="lfoot-txt">Authorised AQB Solutions personnel only</div>
+          <div class="lfoot-ai">⚡ Powered by Claude AI</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1056,9 +1079,9 @@ with st.sidebar:
             # Admin mismatch warning — selected source filter ≠ detected manufacturer
             if _IS_ADMIN and _SRC_FILTER and _SRC_FILTER != detected_mfr:
                 st.markdown(
-                    f'<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;'+
-                    f'padding:4px 10px;font-size:11px;font-weight:600;color:#92400e;margin-top:4px;">'+
-                    f'⚠ Part looks like {detected_mfr} but Source is set to {_SRC_FILTER}</div>',
+                    f'<div style="background:#d97706;border-radius:6px;'
+                    f'padding:5px 11px;font-size:12px;font-weight:700;color:#ffffff;margin-top:5px;">'
+                    f'⚠ Part looks like {detected_mfr} — Source set to {_SRC_FILTER}</div>',
                     unsafe_allow_html=True)
         elif detected_mfr == _TGT_MFR:
             st.markdown(f'<div class="detect-warn">⚠ This looks like a {_TGT_MFR} part number</div>',
