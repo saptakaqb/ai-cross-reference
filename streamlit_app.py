@@ -327,7 +327,7 @@ if "logged_in" not in st.session_state:
     st.session_state["session_id"] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
 if not st.session_state["logged_in"]:
-    # Full-page branded login — all HTML in one self-contained block
+    # Full-page branded login
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
@@ -340,71 +340,68 @@ if not st.session_state["logged_in"]:
     [data-testid="stVerticalBlock"]{padding:0!important;gap:0!important;}
     [data-testid="stSidebar"]{display:none!important;}
     [data-testid="stDecoration"],[data-testid="stHeader"]{display:none!important;}
-    /* Override ALL Streamlit element backgrounds so they don't leak on the gradient */
     [data-testid="stMainBlockContainer"]>div{background:transparent!important;}
 
-    /* Login card wrapper */
-    .lw{display:flex;justify-content:center;align-items:center;
-        min-height:100vh;padding:24px;}
-    .lc{background:#fff;border-radius:22px;padding:42px 44px 36px;
-        width:100%;max-width:440px;
-        box-shadow:0 32px 80px rgba(0,0,0,.40),0 8px 24px rgba(0,0,0,.20);}
-
-    /* Branding row */
-    .lhdr{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
-    .lico{width:52px;height:52px;border-radius:14px;
-        background:linear-gradient(135deg,#071a35 0%,#1356a0 100%);
-        display:flex;align-items:center;justify-content:center;
-        font-size:26px;box-shadow:0 4px 16px rgba(19,86,160,.35);flex-shrink:0;}
-    .lbrand{font-size:10px;font-weight:700;color:#1356a0;
-        text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;}
-    .ltit{font-size:20px;font-weight:800;color:#071a35;line-height:1.2;}
-
-    /* Divider */
-    .lrule{height:1px;background:linear-gradient(90deg,#dde8f8,transparent);
-        margin:18px 0 16px;}
-
-    /* Tagline */
-    .ltag{font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:24px;}
+    /* Compact branding card — fixed small size, viewport-centered */
+    .lcard-outer{
+        display:flex;justify-content:center;
+        padding-top:6vh;
+    }
+    .lcard{
+        background:#fff;border-radius:18px;
+        padding:24px 32px 22px;
+        width:100%;max-width:420px;
+        box-shadow:0 20px 60px rgba(0,0,0,.38),0 4px 16px rgba(0,0,0,.18);
+    }
+    .lhdr{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+    .lico{width:44px;height:44px;border-radius:11px;flex-shrink:0;
+        background:linear-gradient(135deg,#071a35,#1356a0);
+        display:flex;align-items:center;justify-content:center;font-size:22px;
+        box-shadow:0 3px 12px rgba(19,86,160,.30);}
+    .lbrand{font-size:9px;font-weight:700;color:#1356a0;
+        text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;}
+    .ltit{font-size:17px;font-weight:800;color:#071a35;line-height:1.25;}
+    .lrule{height:1px;background:linear-gradient(90deg,#dde8f8 60%,transparent);
+        margin:12px 0 10px;}
+    .ltag{font-size:12px;color:#6b7280;line-height:1.55;margin:0;}
     .ltag strong{color:#1356a0;}
 
-    /* Labels */
-    .lc label{font-size:13px!important;font-weight:600!important;
-        color:#374151!important;margin-bottom:4px!important;}
+    /* Form area — tight spacing */
+    .lform-wrap{
+        display:flex;justify-content:center;
+        margin-top:0;
+    }
+    .lform-inner{width:100%;max-width:420px;padding:0 0 0;}
 
+    /* Input labels */
+    .lform-inner label{
+        font-size:12px!important;font-weight:600!important;
+        color:#d0e4ff!important;letter-spacing:.04em!important;}
     /* Inputs */
-    .lc input{font-size:14px!important;color:#0B1E38!important;
-        border:1.5px solid #d1ddf0!important;border-radius:10px!important;
-        padding:10px 14px!important;background:#f8fafd!important;}
-    .lc input:focus{border-color:#1356a0!important;
-        box-shadow:0 0 0 3px rgba(19,86,160,.12)!important;
-        background:#fff!important;}
-
-    /* Sign-in button */
-    .lc [data-testid="stFormSubmitButton"] button{
+    .lform-inner input{
+        font-size:14px!important;color:#0B1E38!important;
+        background:#f8fafd!important;
+        border:1.5px solid #c8d9f0!important;border-radius:9px!important;}
+    /* Submit button */
+    .lform-inner [data-testid="stFormSubmitButton"] button{
         background:linear-gradient(135deg,#1356a0,#071a35)!important;
-        color:#fff!important;font-size:15px!important;font-weight:700!important;
-        border:none!important;border-radius:10px!important;
-        padding:.65rem 1.2rem!important;margin-top:8px!important;
-        letter-spacing:.02em;
-        box-shadow:0 4px 16px rgba(19,86,160,.35)!important;
-        transition:opacity .15s!important;}
-    .lc [data-testid="stFormSubmitButton"] button:hover{opacity:.9!important;}
-
-    /* Error message */
-    .lc [data-testid="stAlert"]{border-radius:10px!important;}
+        color:#fff!important;font-size:14px!important;font-weight:700!important;
+        border:none!important;border-radius:9px!important;
+        padding:.6rem 1rem!important;margin-top:4px!important;
+        box-shadow:0 4px 14px rgba(19,86,160,.35)!important;}
 
     /* Footer */
-    .lfoot{text-align:center;margin-top:22px;padding-top:16px;
-        border-top:1px solid #eef3fa;}
-    .lfoot-txt{font-size:11px;color:#9ca3af;margin-bottom:8px;}
+    .lfoot{text-align:center;padding-top:14px;margin-top:8px;
+        border-top:1px solid rgba(255,255,255,.12);}
+    .lfoot-txt{font-size:11px;color:rgba(255,255,255,.50);margin-bottom:6px;}
     .lfoot-ai{display:inline-flex;align-items:center;gap:5px;
-        background:#f0f4fa;border:1px solid #dde8f5;border-radius:20px;
-        padding:4px 14px;font-size:11px;font-weight:700;color:#1356a0;}
+        background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.20);
+        border-radius:20px;padding:3px 12px;font-size:10px;
+        font-weight:700;color:rgba(255,255,255,.80);}
     </style>
 
-    <div class="lw">
-      <div class="lc">
+    <div class="lcard-outer">
+      <div class="lcard">
         <div class="lhdr">
           <div class="lico">🔄</div>
           <div>
@@ -413,26 +410,21 @@ if not st.session_state["logged_in"]:
           </div>
         </div>
         <div class="lrule"></div>
-        <div class="ltag">AI-powered cross-referencing — instantly find the best replacement
-          across <strong>7 manufacturers</strong> and <strong>700,000+</strong> configurations.</div>
+        <p class="ltag">AI-powered cross-referencing — instantly find the best replacement
+          across <strong>7 manufacturers</strong> and <strong>700,000+</strong> configurations.</p>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Streamlit form — pull it up tight against the branding card above
-    st.markdown("""
-    <style>
-    /* Pull the form column up to remove gap between card and form */
-    [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"]{
-        margin-top:-280px!important;
-    }
-    </style>""", unsafe_allow_html=True)
+    # Form rendered right below the card, centered, with zero gap
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
+        st.markdown('<div class="lform-inner">', unsafe_allow_html=True)
         with st.form("login_form"):
             uid = st.text_input("User ID", placeholder="e.g. KUB001")
             pwd = st.text_input("Password", type="password", placeholder="Enter password")
             login_btn = st.form_submit_button("Sign In →", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if login_btn:
             with st.spinner("Signing in…"):
