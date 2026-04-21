@@ -332,170 +332,179 @@ if "logged_in" not in st.session_state:
     st.session_state["session_id"] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
 if not st.session_state["logged_in"]:
+    # ── Full-page branded login (v15 — Ebolt-style, AQB navy gradient) ────────
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html,body,[class*="css"]{font-family:'Inter',sans-serif!important;}
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
+    html,body,[class*="css"]{font-family:'DM Sans',sans-serif!important;}
 
-    /* ── Full-page sky-to-navy background ── */
+    /* Full-page sky-to-navy gradient — darkest shade is AQB #071a35 */
     [data-testid="stAppViewContainer"]{
-        background:
-            radial-gradient(ellipse 60% 28% at 4% 100%, rgba(255,255,255,.78) 0%, transparent 65%),
-            radial-gradient(ellipse 55% 25% at 96% 100%, rgba(255,255,255,.72) 0%, transparent 65%),
-            linear-gradient(180deg,
-                #f4f9fe 0%,#ddeefa 18%,#b9d9f5 38%,
-                #82b8e8 56%,#3d80c0 73%,#174d8a 86%,#071a35 100%
-            ) !important;
+        background: linear-gradient(
+            180deg,
+            #c8dff5 0%,
+            #a3c4e8 18%,
+            #7aaad8 35%,
+            #4a7fb5 52%,
+            #1f508f 68%,
+            #0d3370 82%,
+            #071a35 100%
+        ) !important;
         min-height:100vh;
     }
-    [data-testid="stSidebar"],[data-testid="stHeader"],
-    [data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
-
-    /* ── Center the whole page ── */
-    [data-testid="stMainBlockContainer"]{
-        padding:0!important;
-        display:flex!important;align-items:center!important;
-        justify-content:center!important;min-height:100vh!important;
+    /* Subtle cloud-like radial glow mid-screen */
+    [data-testid="stAppViewContainer"]::before{
+        content:"";position:fixed;top:15%;left:50%;
+        transform:translateX(-50%);
+        width:70vw;height:30vh;
+        background:radial-gradient(ellipse,rgba(255,255,255,.13) 0%,transparent 70%);
+        pointer-events:none;
     }
-    [data-testid="stMainBlockContainer"]>div{
-        background:transparent!important;width:100%!important;padding:0!important;
-    }
+    [data-testid="stMainBlockContainer"]{padding:0!important;margin:0!important;}
     [data-testid="stVerticalBlock"]{padding:0!important;gap:0!important;}
-    [data-testid="stHorizontalBlock"]{gap:0!important;padding:0!important;}
+    [data-testid="stSidebar"]{display:none!important;}
+    [data-testid="stDecoration"],[data-testid="stHeader"]{display:none!important;}
+    [data-testid="stMainBlockContainer"]>div{background:transparent!important;}
 
-    /* ── THE CARD: style stForm directly — most reliable target ── */
-    [data-testid="stForm"]{
-        background:#ffffff!important;
-        border-radius:18px!important;
-        padding:36px 32px 32px!important;
-        box-shadow:0 16px 48px rgba(0,0,0,.13),0 2px 8px rgba(0,0,0,.06)!important;
-        border:none!important;
-        margin:0!important;
+    /* Card wrapper — vertically centered in top 70% of screen */
+    .lpage{
+        display:flex;flex-direction:column;align-items:center;
+        justify-content:center;min-height:100vh;
+        padding:24px 16px;
     }
 
-    /* ── Icon + title inside the form ── */
-    .lico-wrap{display:flex;justify-content:center;margin-bottom:16px;}
-    .lico-box{
-        width:48px;height:48px;
-        background:#f3f4f6;border:1.5px solid #e5e7eb;
-        border-radius:12px;
+    /* White floating card */
+    .lcard{
+        background:#ffffff;
+        border-radius:20px;
+        padding:32px 36px 28px;
+        width:100%;max-width:400px;
+        box-shadow:0 24px 64px rgba(7,26,53,.30),0 4px 16px rgba(7,26,53,.14);
+    }
+
+    /* Icon at top of card */
+    .lico-wrap{
+        display:flex;justify-content:center;margin-bottom:20px;
+    }
+    .lico{
+        width:52px;height:52px;border-radius:14px;
+        background:linear-gradient(145deg,#1356a0,#071a35);
         display:flex;align-items:center;justify-content:center;
+        font-size:24px;
+        box-shadow:0 4px 14px rgba(19,86,160,.32);
     }
-    .ltitle{
-        font-size:21px;font-weight:700;color:#111827;
-        text-align:center;letter-spacing:-.4px;line-height:1.3;margin:0 0 7px;
+
+    /* Title + sub */
+    .ltit{
+        font-size:20px;font-weight:800;color:#071a35;
+        text-align:center;margin-bottom:6px;letter-spacing:-.3px;
     }
-    .lsubtitle{
+    .lsub{
         font-size:13px;color:#6b7280;text-align:center;
-        line-height:1.6;margin:0;
+        line-height:1.5;margin-bottom:24px;
     }
-    .ldivider{height:1px;background:#f0f0f0;margin:18px 0 4px;}
+    .lsub strong{color:#1356a0;}
 
-    /* ── Input labels ── */
-    [data-testid="stForm"] label{
-        font-size:12px!important;font-weight:500!important;
-        color:#374151!important;margin-bottom:2px!important;
+    /* Divider */
+    .ldiv{height:1px;background:#e5eaf2;margin:0 0 20px;}
+
+    /* Input field labels (Streamlit renders these as <label>) */
+    .lcard-inner label{
+        font-size:12px!important;font-weight:600!important;
+        color:#374151!important;letter-spacing:.04em!important;
+        text-transform:uppercase!important;
     }
-    /* ── Input fields ── */
-    [data-testid="stForm"] input{
+    /* Input boxes */
+    .lcard-inner input{
         font-size:14px!important;color:#111827!important;
-        background:#ffffff!important;
-        border:1px solid #d1d5db!important;
-        border-radius:8px!important;
-        height:42px!important;padding:0 14px!important;
-        box-shadow:none!important;
-        transition:border-color .15s,box-shadow .15s!important;
+        background:#f9fafb!important;
+        border:1.5px solid #d1d9e6!important;
+        border-radius:10px!important;
+        padding:10px 14px!important;
     }
-    [data-testid="stForm"] input::placeholder{color:#9ca3af!important;}
-    [data-testid="stForm"] input:focus{
-        border-color:#374151!important;
-        box-shadow:0 0 0 3px rgba(55,65,81,.09)!important;outline:none!important;
-    }
-    /* ── Submit button ── */
-    [data-testid="stForm"] [data-testid="stFormSubmitButton"] button{
-        background:#1a1a2e!important;color:#ffffff!important;
-        font-size:14px!important;font-weight:600!important;
-        border:none!important;border-radius:8px!important;
-        height:44px!important;width:100%!important;
-        box-shadow:none!important;margin-top:6px!important;
-        transition:background .15s!important;
-    }
-    [data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover{
-        background:#0f0f1a!important;
-    }
-    /* ── Error ── */
-    [data-testid="stForm"] [data-testid="stAlert"]{
-        border-radius:8px!important;font-size:13px!important;margin-top:4px!important;
+    .lcard-inner input:focus{
+        border-color:#1356a0!important;
+        box-shadow:0 0 0 3px rgba(19,86,160,.12)!important;
     }
 
-    /* ── Footer ── */
-    .lfoot{
-        text-align:center;padding:18px 0;
-        font-size:11px;color:rgba(255,255,255,.48);
-        letter-spacing:.02em;line-height:1.9;
+    /* Primary CTA button */
+    .lcard-inner [data-testid="stFormSubmitButton"] button{
+        background:#071a35!important;
+        color:#ffffff!important;
+        font-size:14px!important;font-weight:700!important;
+        border:none!important;border-radius:10px!important;
+        padding:.65rem 1rem!important;margin-top:6px!important;
+        letter-spacing:.02em!important;
+        box-shadow:0 4px 16px rgba(7,26,53,.28)!important;
+        transition:opacity .15s!important;
     }
-    .lfoot-badge{
+    .lcard-inner [data-testid="stFormSubmitButton"] button:hover{
+        opacity:.88!important;
+    }
+
+    /* Footer note below card */
+    .lfoot{
+        margin-top:20px;text-align:center;
+        font-size:11px;color:rgba(255,255,255,.55);
+        letter-spacing:.02em;
+    }
+    .lpowered{
         display:inline-flex;align-items:center;gap:5px;
-        background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.15);
-        border-radius:20px;padding:3px 12px;
-        font-size:10px;font-weight:600;color:rgba(255,255,255,.68);
+        background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+        border-radius:20px;padding:4px 14px;font-size:10px;font-weight:700;
+        color:rgba(255,255,255,.75);margin-top:8px;
     }
     </style>
+
+    <div class="lpage">
+      <div class="lcard">
+        <div class="lico-wrap"><div class="lico">🔄</div></div>
+        <div class="ltit">Sign in to continue</div>
+        <div class="lsub">
+          AI-powered encoder cross-referencing across
+          <strong>8 manufacturers</strong> and <strong>730,000+</strong> configurations.
+        </div>
+        <div class="ldiv"></div>
+      </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    # ── Center column holds the form-as-card ──────────────────────────────────
-    _, col_mid, _ = st.columns([1, 1.35, 1])
+    # Form rendered inside the card area
+    _, col_mid, _ = st.columns([1, 2.2, 1])
     with col_mid:
+        st.markdown('<div class="lcard-inner">', unsafe_allow_html=True)
         with st.form("login_form"):
-            # Icon + title + subtitle INSIDE the form so they sit in the card
-            st.markdown("""
-            <div class="lico-wrap">
-              <div class="lico-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                     stroke="#374151" stroke-width="2.2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-              </div>
-            </div>
-            <div class="ltitle">Sign in with credentials</div>
-            <div class="lsubtitle">AI-powered encoder cross-referencing across<br>
-            8 manufacturers and 730,000+ configurations.</div>
-            <div class="ldivider"></div>
-            """, unsafe_allow_html=True)
-
             uid = st.text_input("User ID", placeholder="e.g. KUB001 or POS001")
-            pwd = st.text_input("Password", type="password",
-                                placeholder="Enter your password")
-            login_btn = st.form_submit_button("Get Started →",
-                                              use_container_width=True)
+            pwd = st.text_input("Password", type="password", placeholder="Enter your password")
+            login_btn = st.form_submit_button("Get Started →", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if login_btn:
-            uid_clean = uid.strip().upper()
-            if uid_clean in _VALID_USERS and _VALID_USERS[uid_clean] == pwd.strip():
-                prefix  = uid_clean[:3]
-                company = _USER_COMPANY.get(prefix, "AQB Solutions")
-                target  = _PREFIX_TARGET.get(prefix, "Kubler")
-                st.session_state["logged_in"]  = True
-                st.session_state["user_id"]    = uid_clean
-                st.session_state["company"]    = company
-                st.session_state["target_mfr"] = target
-                _log_event(uid_clean, "login")
-                st.rerun()
-            else:
-                st.error("Invalid credentials. Please check your User ID and password.")
+            with st.spinner("Signing in…"):
+                uid_clean = uid.strip().upper()
+                if uid_clean in _VALID_USERS and _VALID_USERS[uid_clean] == pwd.strip():
+                    prefix  = uid_clean[:3]
+                    company = _USER_COMPANY.get(prefix, "AQB Solutions")
+                    target  = _PREFIX_TARGET.get(prefix, "Kubler")
+                    st.session_state["logged_in"]  = True
+                    st.session_state["user_id"]    = uid_clean
+                    st.session_state["company"]    = company
+                    st.session_state["target_mfr"] = target
+                    _log_event(uid_clean, "login")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid credentials. Please check your User ID and password.")
 
-        st.markdown("""
-        <div class="lfoot">
-          Authorised AQB Solutions personnel only<br>
-          <span class="lfoot-badge">⚡ Powered by Claude AI</span>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="lfoot">
+      Authorised AQB Solutions personnel only<br>
+      <span class="lpowered">⚡ Powered by Claude AI</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.stop()
 
+# ── Session init ──────────────────────────────────────────────────────────────
 _USER_ID  = st.session_state["user_id"]
 _COMPANY  = st.session_state["company"]
 _IS_ADMIN = (_USER_ID in _ADMIN_USERS)
@@ -508,7 +517,7 @@ for k, v in [("pn_value",""),("results",None),("status",None),("exps",None),
         st.session_state[k] = v
 
 # ── Data loading ──────────────────────────────────────────────────────────────
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner="Loading encoder database …")
 def load_unified():
     """Load all encoder rows from DuckDB (auto-builds from CSV if DB missing)."""
     try:
@@ -527,84 +536,8 @@ def _db_connected():
     except Exception:
         return False
 
-# ── Custom full-page loading screen (shown only on first cold start) ───────────
-def _show_loading_screen():
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html,body,[class*="css"]{font-family:'Inter',sans-serif!important;}
-    [data-testid="stAppViewContainer"]{
-        background:linear-gradient(180deg,#f4f9fe 0%,#b9d9f5 40%,#3d80c0 75%,#071a35 100%)!important;
-        min-height:100vh;
-    }
-    [data-testid="stSidebar"],[data-testid="stHeader"],[data-testid="stDecoration"]{display:none!important;}
-    [data-testid="stMainBlockContainer"]{padding:0!important;}
-    [data-testid="stMainBlockContainer"]>div{background:transparent!important;}
-    [data-testid="stVerticalBlock"]{gap:0!important;}
-    .ld-wrap{
-        display:flex;flex-direction:column;align-items:center;
-        justify-content:center;min-height:100vh;padding:24px;
-    }
-    .ld-card{
-        background:#ffffff;border-radius:20px;
-        padding:44px 40px 40px;width:100%;max-width:380px;
-        text-align:center;
-        box-shadow:0 12px 40px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
-    }
-    /* Spinning encoder ring */
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-    .ld-ring{
-        width:64px;height:64px;margin:0 auto 24px;
-        border:3.5px solid #e5e7eb;
-        border-top:3.5px solid #071a35;
-        border-radius:50%;
-        animation:spin 1s linear infinite;
-    }
-    .ld-icon{
-        width:28px;height:28px;
-        background:#071a35;border-radius:7px;
-        display:flex;align-items:center;justify-content:center;
-        margin:0 auto 20px;font-size:14px;
-    }
-    .ld-title{font-size:18px;font-weight:700;color:#111827;margin-bottom:8px;}
-    .ld-sub{font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:28px;}
-    .ld-dots span{
-        display:inline-block;width:8px;height:8px;border-radius:50%;
-        background:#071a35;margin:0 3px;animation:pulse 1.2s ease-in-out infinite;
-    }
-    .ld-dots span:nth-child(2){animation-delay:.2s;}
-    .ld-dots span:nth-child(3){animation-delay:.4s;}
-    .ld-status{font-size:12px;color:#9ca3af;margin-top:16px;font-weight:500;letter-spacing:.02em;}
-    </style>
-    <div class="ld-wrap">
-      <div class="ld-card">
-        <div class="ld-ring"></div>
-        <div class="ld-title">Loading Encoder Database</div>
-        <div class="ld-sub">
-          Building search index across<br>730,000+ encoder configurations…
-        </div>
-        <div class="ld-dots">
-          <span></span><span></span><span></span>
-        </div>
-        <div class="ld-status">This takes ~10 seconds on first launch</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Check if data is already cached (warm) or needs to load (cold)
-_is_cold_start = "db_warmed" not in st.session_state
-if _is_cold_start:
-    _loading_placeholder = st.empty()
-    with _loading_placeholder:
-        _show_loading_screen()
-
-UNIFIED_DF = load_unified()
-_DB_ONLINE = _db_connected()
-
-if _is_cold_start:
-    _loading_placeholder.empty()
-    st.session_state["db_warmed"] = True
+UNIFIED_DF   = load_unified()
+_DB_ONLINE   = _db_connected()
 ALL_MFRS     = sorted(UNIFIED_DF["manufacturer"].dropna().unique().tolist())
 COMP_MFRS    = [m for m in ALL_MFRS if m != "Kubler"]
 
@@ -1322,23 +1255,59 @@ with st.sidebar:
         st.rerun()
 
     if submitted and pn_input.strip():
+        st.session_state["pn_value"] = pn_input.strip()
         src_mfr = detected_mfr if (detected_mfr and detected_mfr != _TGT_MFR) else None
         if _IS_ADMIN and _SRC_FILTER:
             src_mfr = _SRC_FILTER
-        # Same-manufacturer guard
+
+        # Same-manufacturer guard — applies to all users including admin
         _eff_src = src_mfr or detected_mfr or ""
-        if _eff_src and _TGT_MFR and _eff_src.lower() == _TGT_MFR.lower() and not _IS_ADMIN:
-            st.session_state.update({"results":None,"status":None,"exps":None,
-                "pn_value": pn_input.strip()})
-            st.warning(f"⚠ Source and target are both **{_TGT_MFR}**. "
-                       f"Please enter a competitor part number to find a {_TGT_MFR} replacement.")
-            st.rerun()
-        # Set pending flag — search executes in main content area on next render
-        st.session_state["pn_value"]       = pn_input.strip()
-        st.session_state["search_pending"] = True
-        st.session_state["_srch_src_mfr"]  = src_mfr
-        st.session_state["_srch_top_n"]    = top_n
-        st.session_state["_srch_det_mfr"]  = detected_mfr or ""
+        if _eff_src and _TGT_MFR and _eff_src.lower() == _TGT_MFR.lower():
+            if not _IS_ADMIN:
+                st.session_state.update({"results":None,"status":None,"exps":None,
+                    "pn_value": pn_input.strip()})
+                st.warning(f"⚠ Source and target are both **{_TGT_MFR}**. "
+                           f"Please enter a competitor part number to find a {_TGT_MFR} replacement.")
+                st.rerun()
+            else:
+                # Admin: allow same-manufacturer — finds closest alternative,
+                # excluding the exact queried part (handled by src_mfr exclusion in matcher)
+                pass
+        _t_search_start = datetime.datetime.utcnow()
+        _prog_bar   = st.progress(0, text="🔍 Looking up encoder in database…")
+        _prog_bar.progress(10, text="🔍 Looking up encoder in database…")
+        _bl, _bo = _load_feedback()
+        _prog_bar.progress(20, text="⚡ Pre-filtering candidate pool…")
+        results, status, exps = find_matches_with_status(
+            pn_input.strip(), UNIFIED_DF,
+            target_manufacturer=_TGT_MFR,
+            source_manufacturer=src_mfr,
+            top_n=top_n,
+            weights=st.session_state["weights"],
+            blocklist=_bl,
+            booklist=_bo,
+        )
+        _prog_bar.progress(85, text="🤖 Generating match explanations…")
+        import time as _time; _time.sleep(0.1)
+        _prog_bar.progress(100, text="✅ Complete!")
+        _time.sleep(0.3)
+        _prog_bar.empty()
+        results_list = _enrich_results(results, UNIFIED_DF)
+        st.session_state.update({"results":results_list,"status":status,"exps":exps})
+        # Build analytics payload
+        top_m   = results_list[0].get("part_number","") if results_list else ""
+        top_s   = f"{results_list[0].get('score_pct',0):.2f}" if results_list else ""
+        tier    = status.get("tier","") if status else ""
+        all_pns = "|".join(str(r.get("part_number","")) for r in results_list)
+        all_sc  = "|".join(f"{r.get('score_pct',0):.2f}" for r in results_list)
+        dur_ms  = round((datetime.datetime.utcnow() - _t_search_start).total_seconds()*1000)
+        wt_snap = json.dumps({k:round(v,4) for k,v in st.session_state["weights"].items()})
+        _log_event(_USER_ID,"search",
+                   part_number=pn_input.strip(), detected_mfr=detected_mfr or "",
+                   top_match=top_m, top_score=top_s,
+                   match_tier=tier, num_results=len(results_list),
+                   all_match_pns=all_pns, all_scores=all_sc,
+                   weights_json=wt_snap, query_duration_ms=dur_ms)
         st.rerun()
 
     st.markdown("---")
@@ -1395,182 +1364,13 @@ pn_val  = st.session_state.get("pn_value","")
 # TAB 1 — Search Results
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_search:
-    # ── Execute pending search here in the main content area ───────────────────
-    if st.session_state.get("search_pending"):
-        import time as _time
-        _t_search_start = datetime.datetime.utcnow()
-        _srch_src_mfr  = st.session_state.pop("_srch_src_mfr", None)
-        _srch_top_n    = st.session_state.pop("_srch_top_n", 5)
-        _srch_det_mfr  = st.session_state.pop("_srch_det_mfr", "")
-        st.session_state["search_pending"] = False
-
-        # ── Creative encoder-themed loading widget ─────────────────────────────
-        st.markdown("""
-        <style>
-        @keyframes gear-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes gear-spin-rev { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
-        @keyframes pulse-dot { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
-        @keyframes slide-in { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes count-up { from{opacity:0} to{opacity:1} }
-
-        .enc-loader{
-            background:#ffffff;border-radius:16px;
-            padding:48px 40px 44px;
-            max-width:520px;margin:32px auto;
-            box-shadow:0 8px 32px rgba(7,26,53,.10),0 2px 8px rgba(7,26,53,.05);
-            border:1px solid #eef1f6;
-            text-align:center;
-        }
-        /* Gear cluster */
-        .enc-gears{
-            display:flex;align-items:center;justify-content:center;
-            gap:2px;margin-bottom:28px;position:relative;height:64px;
-        }
-        .enc-gear-big{
-            font-size:52px;line-height:1;
-            animation:gear-spin 2.4s linear infinite;
-            display:inline-block;
-        }
-        .enc-gear-sm{
-            font-size:28px;line-height:1;margin-top:18px;
-            animation:gear-spin-rev 1.2s linear infinite;
-            display:inline-block;
-        }
-        .enc-gear-xs{
-            font-size:18px;line-height:1;margin-top:-8px;
-            animation:gear-spin 0.8s linear infinite;
-            display:inline-block;
-        }
-        /* Title */
-        .enc-title{
-            font-size:18px;font-weight:700;color:#111827;
-            letter-spacing:-.3px;margin-bottom:6px;
-        }
-        .enc-pn{
-            font-size:13px;color:#6b7280;margin-bottom:24px;
-            font-family:monospace;
-            background:#f8f9fa;border-radius:6px;
-            padding:4px 12px;display:inline-block;
-        }
-        /* Step list */
-        .enc-steps{
-            text-align:left;
-            border-top:1px solid #f3f4f6;
-            padding-top:20px;
-            display:flex;flex-direction:column;gap:11px;
-        }
-        .enc-step{
-            display:flex;align-items:center;gap:12px;
-            font-size:13px;color:#374151;
-            animation:slide-in .4s ease forwards;
-        }
-        .enc-step:nth-child(1){animation-delay:.0s}
-        .enc-step:nth-child(2){animation-delay:.5s;opacity:0}
-        .enc-step:nth-child(3){animation-delay:1.0s;opacity:0}
-        .enc-step:nth-child(4){animation-delay:1.5s;opacity:0}
-        .enc-step:nth-child(5){animation-delay:2.0s;opacity:0}
-        .enc-step-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
-        .enc-step-txt{flex:1;}
-        .enc-step-tag{
-            font-size:10px;font-weight:700;letter-spacing:.06em;
-            background:#f0f4ff;color:#4361b8;
-            border-radius:4px;padding:2px 7px;
-        }
-        /* Pulse dots */
-        .enc-dots{
-            display:flex;justify-content:center;gap:6px;margin-top:24px;
-        }
-        .enc-dot{
-            width:7px;height:7px;border-radius:50%;
-            background:#071a35;
-            animation:pulse-dot 1.2s ease-in-out infinite;
-        }
-        .enc-dot:nth-child(2){animation-delay:.2s}
-        .enc-dot:nth-child(3){animation-delay:.4s}
-        </style>
-
-        <div class="enc-loader">
-          <div class="enc-gears">
-            <span class="enc-gear-sm">⚙️</span>
-            <span class="enc-gear-big">⚙️</span>
-            <span class="enc-gear-xs">⚙️</span>
-          </div>
-          <div class="enc-title">Cross-Referencing Encoder</div>
-          <div class="enc-pn">""" + st.session_state.get("pn_value","") + """</div>
-          <div class="enc-steps">
-            <div class="enc-step">
-              <span class="enc-step-icon">✅</span>
-              <span class="enc-step-txt">Encoder found in database</span>
-              <span class="enc-step-tag">MATCHED</span>
-            </div>
-            <div class="enc-step">
-              <span class="enc-step-icon">🔩</span>
-              <span class="enc-step-txt">Evaluating shaft type &amp; bore diameter</span>
-              <span class="enc-step-tag">T1 GATES</span>
-            </div>
-            <div class="enc-step">
-              <span class="enc-step-icon">📡</span>
-              <span class="enc-step-txt">Comparing PPR resolution &amp; output circuit</span>
-              <span class="enc-step-tag">T2 SCORING</span>
-            </div>
-            <div class="enc-step">
-              <span class="enc-step-icon">🌡️</span>
-              <span class="enc-step-txt">Checking IP rating, temperature &amp; speed limits</span>
-              <span class="enc-step-tag">T3 SCORING</span>
-            </div>
-            <div class="enc-step">
-              <span class="enc-step-icon">🏆</span>
-              <span class="enc-step-txt">Ranking best replacements across 730,000+ configs</span>
-              <span class="enc-step-tag">FINAL RANK</span>
-            </div>
-          </div>
-          <div class="enc-dots">
-            <div class="enc-dot"></div>
-            <div class="enc-dot"></div>
-            <div class="enc-dot"></div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Execute the actual search
-        _bl, _bo = _load_feedback()
-        _t_actual = _time.time()
-        results, status, exps = find_matches_with_status(
-            st.session_state["pn_value"], UNIFIED_DF,
-            target_manufacturer=_TGT_MFR,
-            source_manufacturer=_srch_src_mfr,
-            top_n=_srch_top_n,
-            weights=st.session_state["weights"],
-            blocklist=_bl, booklist=_bo,
-        )
-        # Minimum 2.5s so the animation is always seen
-        _elapsed = _time.time() - _t_actual
-        if _elapsed < 2.5:
-            _time.sleep(2.5 - _elapsed)
-
-        results_list = _enrich_results(results, UNIFIED_DF)
-        st.session_state.update({"results":results_list,"status":status,"exps":exps})
-        top_m   = results_list[0].get("part_number","") if results_list else ""
-        top_s   = f"{results_list[0].get('score_pct',0):.2f}" if results_list else ""
-        tier    = status.get("tier","") if status else ""
-        all_pns = "|".join(str(r.get("part_number","")) for r in results_list)
-        all_sc  = "|".join(f"{r.get('score_pct',0):.2f}" for r in results_list)
-        dur_ms  = round((datetime.datetime.utcnow() - _t_search_start).total_seconds()*1000)
-        wt_snap = json.dumps({k:round(v,4) for k,v in st.session_state["weights"].items()})
-        _log_event(_USER_ID,"search",
-                   part_number=st.session_state["pn_value"], detected_mfr=_srch_det_mfr,
-                   top_match=top_m, top_score=top_s, match_tier=tier,
-                   num_results=len(results_list), all_match_pns=all_pns, all_scores=all_sc,
-                   weights_json=wt_snap, query_duration_ms=dur_ms)
-        st.rerun()
-
-    elif not pn_val:
+    if not pn_val:
         st.markdown("""
         <div class="empty-state" style="text-align:center;padding:64px 20px;color:#3a7fd4;
              background:white;border-radius:12px;border:2px dashed #c5d8f0;">
           <div style="font-size:52px;margin-bottom:12px;">🔍</div>
           <div style="font-size:18px;font-weight:700;margin-bottom:8px;">
-            Enter a competitor part number to find the best """ + _TGT_MFR + """ replacement
+            Enter a competitor part number to find the best {_TGT_MFR} replacement
           </div>
           <div style="font-size:13px;color:#6b7280;">
             Supports: Lika · Wachendorff · Sick · Baumer · EPC · Nidec · Posital
