@@ -1,0 +1,22 @@
+# API credentials — never commit this
+config_claude.py
+
+# Analytics log — ephemeral on Streamlit Cloud, keep locally only
+user_analytics.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+-e 
+# DuckDB binary — rebuilt from CSVs, not committed
+data/encoder_crossref.duckdb
