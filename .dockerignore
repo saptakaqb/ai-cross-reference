@@ -1,0 +1,14 @@
+.git
+.gitignore
+.gitattributes
+__pycache__
+*.pyc
+*.pyo
+.streamlit/secrets.toml
+config_claude.py
+user_analytics.csv
+feedback_overrides.json
+*.zip
+*.md
+test_api.py
+last_response.json

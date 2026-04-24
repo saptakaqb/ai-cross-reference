@@ -643,6 +643,7 @@ _MFR_PATTERNS = [
     ("Baumer",      re.compile(r"^EIL|^EBD|^EB2|^HOG|^GXP|^BDG", re.I)),
     ("EPC",         re.compile(r"^8[05]2S|^858S|^725|^755|^15[ST]|^25[TSF]|^30M|^58T|^702|^TR[123P]", re.I)),
     ("Nidec",       re.compile(r"^AV\d{1,2}", re.I)),
+    ("Posital",     re.compile(r"^UCE-IP[TH]", re.I)),
     ("Kubler",      re.compile(r"^K[58][08]I|^K[IS]40|^A02|^5[02][02][05]|^8\.[05]", re.I)),
 ]
 
@@ -1035,11 +1036,157 @@ _NATIVE_NAMES = {
     },
 }
 
-def _native(mfr, col):
-    """Return native field name for a manufacturer+column, fallback to canonical label."""
-    return (_NATIVE_NAMES.get(mfr, {}).get(col)
-            or _NATIVE_NAMES.get("Kubler", {}).get(col)
-            or col.replace("_", " ").title())
+# ── Product URL lookup ────────────────────────────────────────────────────────
+_KUBLER_BASE = "https://www.kuebler.com/en/products/measurement/encoders/product-finder/product-details/"
+_NIDEC_BASE  = "https://www.nidec-avtronencoders.com/encoders/incremental-encoders/"
+_LIKA_BASE   = "https://www.lika.it/eng/products/rotary-encoders/incremental/"
+
+# Family-level URL map — for manufacturers without per-SKU URLs in DB
+_FAMILY_URLS = {
+    "Kubler": {
+        "5000":           _KUBLER_BASE + "5000",
+        "5020":           _KUBLER_BASE + "5020",
+        "A020":           _KUBLER_BASE + "A020",
+        "A02H":           _KUBLER_BASE + "A02H",
+        "K58I_shaft":     _KUBLER_BASE + "K58I",
+        "K58I_hollow":    _KUBLER_BASE + "K58I",
+        "K58I-PR_shaft":  _KUBLER_BASE + "K58I_Performance",
+        "K58I-PR_hollow": _KUBLER_BASE + "K58I_Performance",
+        "K80I":           _KUBLER_BASE + "K80I",
+        "K80I-PR":        _KUBLER_BASE + "K80I_Performance",
+        "KIH40":          _KUBLER_BASE + "KIH40",
+        "KIS40":          _KUBLER_BASE + "KIS40",
+    },
+    "Nidec": {
+        "AV4":   _NIDEC_BASE + "av4",
+        "AV5":   _NIDEC_BASE + "av5",
+        "AV12":  _NIDEC_BASE + "av12",
+        "AV20":  _NIDEC_BASE + "av20",
+        "AV25":  _NIDEC_BASE + "av25",
+        "AV30B": _NIDEC_BASE + "av30b",
+        "AV44":  _NIDEC_BASE + "av44",
+        "AV45":  _NIDEC_BASE + "av45",
+        "AV56A": _NIDEC_BASE + "av56a",
+        "AV56S": _NIDEC_BASE + "av56s",
+    },
+    "Lika": {
+        "C58":   _LIKA_BASE + "c58-c59-c60",
+        "C58A":  _LIKA_BASE + "c58a-c58r",
+        "C58R":  _LIKA_BASE + "c58a-c58r",
+        "CK58":  _LIKA_BASE + "ck58-ck59-ck60",
+        "CKP58": _LIKA_BASE + "ckp58-ckp59-ckp60",
+        "CKQ58": _LIKA_BASE + "ckq58-ckq59-ckq60",
+        "CX58":  _LIKA_BASE + "cx58-cx59",
+        "I58":   _LIKA_BASE + "i58-i58s",
+        "I58S":  _LIKA_BASE + "i58-i58s",
+        "I58R":  _LIKA_BASE + "i58r",
+        "I58SK": _LIKA_BASE + "i58sk",
+        "IP58":  _LIKA_BASE + "ip58-ip58s",
+        "IP58S": _LIKA_BASE + "ip58-ip58s",
+        "IQ58":  _LIKA_BASE + "iq58-iq58s",
+        "IQ58S": _LIKA_BASE + "iq58-iq58s",
+        "IX58":  _LIKA_BASE + "ix58-ix58s",
+        "IX58S": _LIKA_BASE + "ix58-ix58s",
+        "MC58":  _LIKA_BASE + "mc58-mc59-mc60",
+        "MI58":  _LIKA_BASE + "mi58-mi58s",
+        "MI58S": _LIKA_BASE + "mi58-mi58s",
+    },
+    "EPC": {
+        "858S":        "https://www.encoder.com/model-858s",
+        "802S":        "https://www.encoder.com/model-802s",
+        "755A_shaft":  "https://www.encoder.com/model-755a",
+        "755A_hollow": "https://www.encoder.com/model-755a",
+        "776":         "https://www.encoder.com/model-776",
+        "260":         "https://www.encoder.com/model-260",
+    },
+}
+
+# Short domain label for the "View on …" button
+_MFR_DOMAIN = {
+    "Kubler":      "kuebler.com",
+    "Nidec":       "nidec-avtronencoders.com",
+    "Lika":        "lika.it",
+    "Sick":        "sick.com",
+    "Posital":     "posital.com",
+    "Wachendorff": "wachendorff-automation.de",
+    "Baumer":      "baumer.com",
+    "EPC":         "encoder.com",
+}
+
+# Sick per-SKU URL lookup — loaded once at startup from data/sick_urls.csv
+@st.cache_resource(show_spinner=False)
+def _load_sick_urls() -> dict:
+    _sick_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sick_urls.csv")
+    if not os.path.exists(_sick_csv):
+        return {}
+    try:
+        _sdf = pd.read_csv(_sick_csv)
+        return dict(zip(_sdf["part_number"].astype(str).str.upper(),
+                        _sdf["product_url"].astype(str)))
+    except Exception:
+        return {}
+
+# Baumer per-SKU URL lookup — loaded once at startup from data/baumer_urls.csv
+@st.cache_resource(show_spinner=False)
+def _load_baumer_urls() -> dict:
+    _baumer_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "baumer_urls.csv")
+    if not os.path.exists(_baumer_csv):
+        return {}
+    try:
+        _bdf = pd.read_csv(_baumer_csv)
+        return dict(zip(_bdf["part_number"].astype(str).str.upper(),
+                        _bdf["product_url"].astype(str)))
+    except Exception:
+        return {}
+
+# Wachendorff per-model URL lookup — loaded once at startup from data/wachendorff_urls.csv
+@st.cache_resource(show_spinner=False)
+def _load_wachendorff_urls() -> dict:
+    _wdg_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "wachendorff_urls.csv")
+    if not os.path.exists(_wdg_csv):
+        return {}
+    try:
+        _wdf = pd.read_csv(_wdg_csv)
+        return dict(zip(_wdf["part_number"].astype(str).str.upper(),
+                        _wdf["product_url"].astype(str)))
+    except Exception:
+        return {}
+
+def _get_product_url(res: dict):
+    """
+    Resolve a product URL for a match card.
+    Priority:
+      1. product_url field in the row  (Posital — always set)
+      2. Per-SKU / per-model lookup CSVs (Sick, Baumer, Wachendorff)
+      3. Family-level URL dict (Kubler, Nidec, Lika, EPC)
+      4. None → no button shown
+    """
+    mfr    = str(res.get("manufacturer", "")).strip()
+    family = str(res.get("product_family", "")).strip()
+    pn     = str(res.get("part_number",   "")).strip()
+
+    # 1. Row-level product_url (Posital)
+    row_url = str(res.get("product_url", "") or "").strip()
+    if row_url and row_url not in ("nan", "None", ""):
+        return row_url
+
+    # 2. Per-SKU/model lookup CSVs
+    if mfr == "Sick":
+        url = _load_sick_urls().get(pn.upper()) or _load_sick_urls().get(pn)
+        if url:
+            return url
+    if mfr == "Baumer":
+        url = _load_baumer_urls().get(pn.upper()) or _load_baumer_urls().get(pn)
+        if url:
+            return url
+    if mfr == "Wachendorff":
+        url = _load_wachendorff_urls().get(pn.upper()) or _load_wachendorff_urls().get(pn)
+        if url:
+            return url
+
+    # 3. Family-level dict (Kubler, Nidec, Lika, EPC)
+    fam_map = _FAMILY_URLS.get(mfr, {})
+    return fam_map.get(family)  # None if not found
 
 # ── 4-column parameter mapping ────────────────────────────────────────────────
 _SKIP_PM = {"manufacturer","source_pdf","order_pattern",
@@ -1614,9 +1761,9 @@ with tab_search:
 
             with st.container():
                 # Card header + specs grid
-                _prod_url = str(res.get('product_url', '') or '').strip()
-                _is_posital = str(res.get('manufacturer', '')).lower() == 'posital'
-                if _prod_url and _is_posital:
+                _prod_url  = _get_product_url(res)
+                _mfr_label = _MFR_DOMAIN.get(str(res.get("manufacturer", "")), "")
+                if _prod_url and _mfr_label:
                     _url_btn = (
                         '<a href="' + _prod_url + '" target="_blank" rel="noopener" '
                         'style="display:inline-flex;align-items:center;gap:6px;'
@@ -1624,7 +1771,7 @@ with tab_search:
                         'border-radius:8px;padding:6px 14px;text-decoration:none;'
                         'margin:10px 20px 14px;letter-spacing:.02em;'
                         'box-shadow:0 2px 8px rgba(7,26,53,.22);">'
-                        '🔗 View on Posital.com →</a>'
+                        '🔗 View on ' + _mfr_label + ' →</a>'
                     )
                 else:
                     _url_btn = ''
@@ -1952,10 +2099,10 @@ Matching is done across **12 scored parameters** in 3 tiers:
 ## How to Use This App
 
 **Step 1 — Enter a part number**
-Type or paste a competitor encoder part number into the sidebar. The app will auto-detect the manufacturer from the part number pattern. Supported: Lika · Wachendorff · Sick · Baumer · EPC · Nidec.
+Type or paste a competitor encoder part number into the sidebar. The app will auto-detect the manufacturer from the part number pattern. Supported: Lika · Wachendorff · Sick · Baumer · EPC · Nidec · Posital.
 
 **Step 2 — Run the search**
-Click "Find Kübler Match". The engine scores all {total_rows_about:,} encoders in under a second and returns the top N results.
+Click "Find Match". The engine scores all {total_rows_about:,} encoders in under a second and returns the top N results.
 
 **Step 3 — Review results**
 Each match card shows:
@@ -1989,6 +2136,6 @@ Admin login unlocks **any-to-any matching** — set both source and target manuf
 
     st.markdown(f"""
 ---
-*Version 14 · AQB Solutions · Powered by Claude AI (Anthropic)*
+*Version 15 · AQB Solutions · Powered by Claude AI (Anthropic)*
 *Logged in as: **{_USER_ID}** ({_COMPANY})*
     """)

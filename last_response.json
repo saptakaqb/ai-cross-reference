@@ -1,0 +1,37 @@
+{
+  "part_number_queried": "DFS60B-S4PA10000",
+  "status": "weak",
+  "status_message": "Weak match \u2014 no close equivalent found.",
+  "matches": [
+    {
+      "rank": 1,
+      "part_number": "HDmag MHGE 400",
+      "manufacturer": "Baumer",
+      "product_family": "HDmag",
+      "match_score": 0.7211,
+      "match_score_pct": "72.1%",
+      "tier": "strong",
+      "ai_explanation": "The Baumer HDmag MHGE 400 is a suitable replacement for the Sick DFS60B-S4PA10000 with a 99.29% match score. The critical parameters align well: both units offer programmable resolution that can be configured to the required 10000 PPR, identical IP67 protection rating, and the same maximum operating temperature of 100\u00b0C. The supply voltage ranges are highly compatible with the Baumer's 4.75\u201330.0 V range fitting within the Sick's 4.5\u201332.0 V specification, though with slightly narrower limits. Before ordering, verify that the programmable resolution feature on the Baumer can be configured to exactly match your application requirements, and confirm that the 4.75 V minimum supply voltage works with your existing power supply if it operates near the lower end of the range."
+    },
+    {
+      "rank": 2,
+      "part_number": "HDmag MHGE 800",
+      "manufacturer": "Baumer",
+      "product_family": "HDmag",
+      "match_score": 0.7211,
+      "match_score_pct": "72.1%",
+      "tier": "strong",
+      "ai_explanation": "The Baumer HDmag MHGE 800 is a suitable replacement for the Sick DFS60B-S4PA10000 with a 99.29% match score. The key parameters align well: both units feature IP67 protection, operate from -40\u00b0C to 100\u00b0C, and the Baumer's programmable resolution can be configured to the required 10,000 PPR. The supply voltage ranges are highly compatible at 4.5-32.0V (Sick) versus 4.75-30.0V (Baumer), with sufficient overlap for most applications. However, you should verify that your supply voltage falls within the Baumer's 4.75-30.0V range and confirm the programming procedure for setting the 10,000 PPR resolution before ordering."
+    },
+    {
+      "rank": 3,
+      "part_number": "858S-AH0500020QPP5SK",
+      "manufacturer": "EPC",
+      "product_family": "858S",
+      "match_score": 0.6901,
+      "match_score_pct": "69.0%",
+      "tier": "moderate",
+      "ai_explanation": "The Kubler EPC 858S-AH0500020QPP5SK is **not a suitable replacement** for the Sick DFS60B-S4PA10000 due to a critical output circuit incompatibility. While the mechanical specifications align well with 58mm vs 60mm housing diameter and 9.525mm vs 10mm shaft diameter (both within acceptable tolerances), and electrical parameters are compatible with 4.75-28V vs 4.5-32V supply voltage, the fundamental signal output differs significantly. The Sick encoder provides Sin/Cos analog signals while the Kubler unit outputs Push-Pull digital signals, making them incompatible with each other's receiving circuits. Before considering this replacement, you would need to verify your system can accept Push-Pull signals instead of Sin/Cos, which typically requires different input circuitry and signal processing."
+    }
+  ]
+}
