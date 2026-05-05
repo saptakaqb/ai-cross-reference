@@ -1363,20 +1363,64 @@ def _param_mapping_html(source_rec, target_rec, target_mfr="Kubler"):
 
     display_fields = [c for c in CANONICAL_COLUMNS if c not in _SKIP_PM]
 
-    def _val(rec, col):
-        v = rec.get(col)
-        if _safe(v) is None or str(v) in ("nan","None",""):
+    # ── Unit lookup: schema units + manual overrides for fields stored
+    #    as raw strings with embedded units in some manufacturers' ETLs
+    _col_unit = {}
+    for _meta in UNIFIED_SCHEMA.values():
+        _c = _meta.get("col",""); _u = _meta.get("unit","")
+        if _c and _u:
+            _col_unit[_c] = _u
+    # Shock was stored in g by some manufacturers — normalise display to m/s²
+    _col_unit["shock_resistance"] = "m/s²"
+
+    def _field_label(mfr, col):
+        """Return native field name with unit appended in (parens), avoiding double-add."""
+        name = _native(mfr, col)
+        unit = _col_unit.get(col, "")
+        if unit:
+            # Only append if the unit isn't already somewhere in the label
+            if unit not in name and unit.lower() not in name.lower():
+                name = f"{name} ({unit})"
+        return html.escape(name)
+
+    def _clean_value(col, raw):
+        """Return a clean numeric/descriptive string with NO embedded unit suffix."""
+        if raw is None or str(raw).strip() in ("nan","None",""):
             return None
-        return str(v)
+        s = str(raw).strip()
+
+        # ── Shock: convert g → m/s²  OR  strip 'm/s2'/'m/s²' suffix ──────────
+        if col == "shock_resistance":
+            # "50 g" or "50g" → round(50 × 9.81, 1)
+            m = re.match(r'^(\d+(?:\.\d+)?)\s*g\s*$', s, re.IGNORECASE)
+            if m:
+                return str(round(float(m.group(1)) * 9.81, 1))
+            # "3000 m/s2, 6 ms" → "3000" (keep only numeric lead)
+            m2 = re.match(r'^(\d+(?:\.\d+)?)\s*m/s', s, re.IGNORECASE)
+            if m2:
+                return m2.group(1)
+            return s  # unparseable — show as-is
+
+        # ── All other fields: strip trailing unit suffix if present ────────────
+        unit = _col_unit.get(col, "")
+        if unit:
+            # Escape special regex chars in unit (e.g. "m/s²" has /)
+            pat = re.compile(r'\s*' + re.escape(unit) + r'\s*$', re.IGNORECASE)
+            stripped = pat.sub('', s).strip()
+            if stripped:  # only use stripped if something remains
+                return stripped
+        return s
 
     rows = ""
     for col in display_fields:
-        tgt_v = _val(target_rec, col)
-        src_v = _val(source_rec, col)
+        tgt_raw = target_rec.get(col)
+        src_raw = source_rec.get(col)
+        tgt_v = _clean_value(col, tgt_raw)
+        src_v = _clean_value(col, src_raw)
         if tgt_v is None and src_v is None:
             continue
-        tgt_name = html.escape(_native(target_mfr, col))
-        src_name = html.escape(_native(src_mfr, col))
+        tgt_name = _field_label(target_mfr, col)
+        src_name = _field_label(src_mfr, col)
         tgt_disp = html.escape(tgt_v) if tgt_v else '<span style="color:#c0cfe0;font-style:italic;">—</span>'
         src_disp = html.escape(src_v) if src_v else '<span style="color:#c0cfe0;font-style:italic;">—</span>'
         # Highlight row when values differ
@@ -1920,20 +1964,22 @@ with tab_search:
         tier    = status.get("tier","") if status else ""
         all_pns = "|".join(str(r.get("part_number","")) for r in results_list)
         all_sc  = "|".join(f"{r.get('score_pct',0):.4f}" for r in results_list)
-        dur_ms  = round((datetime.datetime.utcnow() - _t_search_start).total_seconds()*1000)
         wt_snap = json.dumps({k:round(v,4) for k,v in st.session_state["weights"].items()})
-        # Log to CSV (legacy) and DuckDB
         _log_event(_USER_ID,"search",
                    part_number=st.session_state["pn_value"], detected_mfr=_srch_det_mfr,
                    top_match=str(top_m), top_score=str(top_s), match_tier=tier,
                    num_results=len(results_list), all_match_pns=all_pns, all_scores=all_sc,
-                   weights_json=wt_snap, query_duration_ms=dur_ms)
+                   weights_json=wt_snap, query_duration_ms=0)
         if not _IS_ADMIN:
             log_search(_USER_ID, st.session_state["session_id"],
                        st.session_state["pn_value"], _srch_det_mfr or "", _TGT_MFR,
                        tier, str(top_m), float(top_s) if top_s else 0.0,
-                       len(results_list), dur_ms)
-            st.session_state["search_count"] = get_search_count(_USER_ID)
+                       len(results_list))
+            # Increment in session state immediately (don't wait for DB round-trip)
+            st.session_state["search_count"] = st.session_state.get("search_count", 0) + 1
+            # Also sync with DB count (takes whichever is larger — guards against race)
+            db_count = get_search_count(_USER_ID)
+            st.session_state["search_count"] = max(st.session_state["search_count"], db_count)
         st.rerun()
 
     elif not pn_val:
@@ -2371,9 +2417,8 @@ if _IS_ADMIN:
                     # Progress bar
                     st.progress(_pct / 100,
                                 text=f"{_pct}% of search limit consumed")
-                    if ud.get("avg_query_ms"):
-                        st.caption(f"Avg query time: {ud['avg_query_ms']:.0f} ms  ·  "
-                                   f"Last login: {str(ud['last_login'])[:16] if ud['last_login'] else 'never'}")
+                    st.caption(f"Last login: {str(ud['last_login'])[:16] if ud['last_login'] else 'never'}  ·  "
+                               f"Last search: {str(ud['last_search'])[:16] if ud['last_search'] else 'never'}")
                     if ud["notes"]:
                         st.markdown(f"**Notes:** {ud['notes']}")
                     st.markdown("---")
@@ -2410,12 +2455,13 @@ if _IS_ADMIN:
                     else:
                         import pandas as _pd_admin
                         hdf = _pd_admin.DataFrame(hist)
-                        hdf["ts"]        = hdf["ts"].astype(str).str[:19]
+                        hdf["ts"] = hdf["ts"].astype(str).str[:19]
+                        # top_score stored as fraction (0.0–1.0)
                         hdf["top_score"] = hdf["top_score"].apply(
                             lambda x: f"{float(x)*100:.2f}%" if x else "—")
                         st.dataframe(hdf[["ts","part_number","source_mfr","target_mfr",
                                           "match_tier","top_match_pn","top_score",
-                                          "num_results","query_ms"]],
+                                          "num_results"]],
                                      use_container_width=True, hide_index=True)
             else:
                 st.markdown(f"**{len(sums)} users** — click to view details")

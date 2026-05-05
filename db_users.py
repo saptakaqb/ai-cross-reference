@@ -57,7 +57,6 @@ def init_user_tables():
     """)
     con.execute("""
         CREATE TABLE IF NOT EXISTS login_log (
-            id         INTEGER,
             user_id    VARCHAR,
             action     VARCHAR,
             session_id VARCHAR,
@@ -66,18 +65,16 @@ def init_user_tables():
     """)
     con.execute("""
         CREATE TABLE IF NOT EXISTS search_log (
-            id              INTEGER,
-            user_id         VARCHAR,
-            session_id      VARCHAR,
-            part_number     VARCHAR,
-            source_mfr      VARCHAR,
-            target_mfr      VARCHAR,
-            match_tier      VARCHAR,
-            top_match_pn    VARCHAR,
-            top_score       DOUBLE,
-            num_results     INTEGER,
-            query_duration_ms INTEGER,
-            ts              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            user_id      VARCHAR,
+            session_id   VARCHAR,
+            part_number  VARCHAR,
+            source_mfr   VARCHAR,
+            target_mfr   VARCHAR,
+            match_tier   VARCHAR,
+            top_match_pn VARCHAR,
+            top_score    DOUBLE,
+            num_results  INTEGER,
+            ts           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     con.close()
@@ -196,21 +193,23 @@ def log_login(user_id: str, action: str, session_id: str):
 
 def log_search(user_id: str, session_id: str, part_number: str,
                source_mfr: str, target_mfr: str, match_tier: str,
-               top_match_pn: str, top_score: float,
-               num_results: int, query_duration_ms: int):
+               top_match_pn: str, top_score: float, num_results: int):
+    """top_score must be stored as fraction (0.0–1.0), not percentage."""
     try:
         con = duckdb.connect(DB_PATH)
         con.execute(
             "INSERT INTO search_log "
             "(user_id, session_id, part_number, source_mfr, target_mfr, "
-            "match_tier, top_match_pn, top_score, num_results, query_duration_ms) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "match_tier, top_match_pn, top_score, num_results) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
             [user_id, session_id, part_number, source_mfr, target_mfr,
-             match_tier, top_match_pn, top_score, num_results, query_duration_ms]
+             match_tier, top_match_pn, float(top_score) / 100.0 if top_score > 1.0 else float(top_score),
+             num_results]
         )
         con.close()
-    except Exception:
-        pass
+    except Exception as e:
+        import traceback
+        print(f"[log_search ERROR] {e}\n{traceback.format_exc()}")
 
 # ── Analytics ─────────────────────────────────────────────────────────────────
 def get_platform_stats() -> dict:
@@ -243,11 +242,10 @@ def get_user_summary() -> list:
             SELECT
                 u.user_id, u.role, u.search_limit, u.is_active,
                 u.created_at, u.notes,
-                COUNT(DISTINCT s.session_id)      AS total_sessions,
-                COUNT(s.user_id)                  AS total_searches,
-                MAX(s.ts)                         AS last_search,
-                MAX(l.ts)                         AS last_login,
-                AVG(s.query_duration_ms)          AS avg_query_ms
+                COUNT(DISTINCT s.session_id) AS total_sessions,
+                COUNT(s.user_id)             AS total_searches,
+                MAX(s.ts)                    AS last_search,
+                MAX(l.ts)                    AS last_login
             FROM users u
             LEFT JOIN search_log s ON s.user_id = u.user_id
             LEFT JOIN login_log  l ON l.user_id = u.user_id AND l.action='login'
@@ -257,7 +255,7 @@ def get_user_summary() -> list:
         """).fetchall()
         con.close()
         keys = ["user_id","role","search_limit","is_active","created_at","notes",
-                "total_sessions","total_searches","last_search","last_login","avg_query_ms"]
+                "total_sessions","total_searches","last_search","last_login"]
         return [dict(zip(keys, r)) for r in rows]
     except Exception:
         return []
@@ -267,12 +265,12 @@ def get_user_search_history(user_id: str) -> list:
         con = duckdb.connect(DB_PATH)
         rows = con.execute("""
             SELECT ts, part_number, source_mfr, target_mfr,
-                   match_tier, top_match_pn, top_score, num_results, query_duration_ms
+                   match_tier, top_match_pn, top_score, num_results
             FROM search_log WHERE user_id=? ORDER BY ts DESC
         """, [user_id]).fetchall()
         con.close()
         keys = ["ts","part_number","source_mfr","target_mfr",
-                "match_tier","top_match_pn","top_score","num_results","query_ms"]
+                "match_tier","top_match_pn","top_score","num_results"]
         return [dict(zip(keys, r)) for r in rows]
     except Exception:
         return []
